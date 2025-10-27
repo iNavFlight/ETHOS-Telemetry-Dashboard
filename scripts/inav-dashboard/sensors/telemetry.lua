@@ -100,7 +100,7 @@ local sensorTable = {
 
     satellites = {
         name = "Satellites",
-        sensors = {sport = {{category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0480, subId = 0}, {category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0410, subId = 0}}, crsf = {"GPS Satellites"}},
+        sensors = {sport = {{category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0400, subId = 0},{category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0480, subId = 0}, {category = CATEGORY_TELEMETRY_SENSOR, appId = 0x0410, subId = 0}}, crsf = {"GPS Satellites"}},
         autoCreate = true,
         transform = function(value)
             if currentTelemetryType == "sport" then
