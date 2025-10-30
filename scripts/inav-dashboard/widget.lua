@@ -303,7 +303,7 @@ function widget.wakeup()
             local new_lock
             if fm == nil then
                 new_lock = false
-            elseif fm == 2 then
+            elseif fm == 2 or fm == 100 or fm == 101 then
                 new_lock = false
             else
                 new_lock = true
@@ -317,7 +317,7 @@ function widget.wakeup()
             local lat = sensors['gps_latitude']
             local lon = sensors['gps_longitude']
             if new_lock then
-                if (not sensors['home_latitude'] or sensors['home_latitude'] == 0) and lat and lon then
+                if (not sensors['home_latitude'] or sensors['home_latitude'] == 0 or fm == 103) and lat and lon then
                     sensors['home_latitude'] = lat
                     sensors['home_longitude'] = lon
                 end
