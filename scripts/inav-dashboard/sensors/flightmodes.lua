@@ -7,10 +7,9 @@ local inavdash = require("inavdash")
 
 local M = {}
 
-M.MODE = {DISARMED = 0, READY_TO_ARM = 1, ARMING_PREVENTED = 2, ACRO = 10, ANGLE = 11, HORIZON = 12, PASSTHRU = 13, ALT_HOLD_ANGLE = 20, POS_HOLD_ANGLE = 21, WAYPOINT = 22, RTH = 23, COURSE_HOLD = 26, CRUISE = 27, FAILSAFE = 99}
+M.MODE = {DISARMED = 0, READY_TO_ARM = 1, ARMING_PREVENTED = 2, ACRO = 10, ANGLE = 11, HORIZON = 12, PASSTHRU = 13, ALT_HOLD_ANGLE = 20, POS_HOLD_ANGLE = 21, WAYPOINT = 22, RTH = 23, COURSE_HOLD = 26, CRUISE = 27, FAILSAFE = 99, WAIT = 100, ERROR = 101, ACRO_AIR = 102, HOME_RESET = 103, LANDING = 104, ANGLE_HOLD = 105, NO_DATA = 255}
 
-local last_abcde = 0
-local last_mode = M.MODE.DISARMED
+local last_mode_id = M.MODE.DISARMED
 
 local function bit_is_set(value, mask)
     value = value or 0
@@ -32,77 +31,49 @@ local function digits_ABCDE(n)
     return math.floor(A), math.floor(B), math.floor(C), math.floor(D), math.floor(E)
 end
 
-local function pack_ABCDE(A, B, C, D, E) return (A or 0) * 10000 + (B or 0) * 1000 + (C or 0) * 100 + (D or 0) * 10 + (E or 0) end
-
-local function crsfToABCDE(fm)
-    if not fm then return 0 end
-    local A, B, C, D, E = 0, 0, 0, 0, 0
-
-    if fm == "!ERR" or fm == "WAIT" then
-
-        E = 2
-
-    elseif fm == "OK" then
-
-        E = 1
-
-    elseif fm == "ACRO" or fm == "AIR" then
-
-        D, E = 0, 4
-
-    elseif fm == "ANGL" or fm == "STAB" then
-
-        D, E = 1, 4
-
-    elseif fm == "HOR" then
-
-        D, E = 2, 4
-
-    elseif fm == "MANU" then
-
-        D, E = 4, 4
-
-    elseif fm == "AH" then
-
-        C, D, E = 2, 1, 4
-
-    elseif fm == "HOLD" then
-
-        C, D, E = 4, 1, 4
-
-    elseif fm == "WP" then
-
-        B, D, E = 2, 1, 4
-
-    elseif fm == "RTH" then
-
-        B, C, D, E = 1, 6, 1, 4
-
-    elseif fm == "!FS!" then
-
-        A, E = 4, 4
-
-    elseif fm == "CRS" or fm == "CRSH" then
-
-        B, E = 8, 4
-
-    elseif fm == "3CRS" or fm == "CRUZ" then
-
-        B, C, E = 8, 2, 4
-
-    elseif fm == "HRST" then
-
-        return nil
-
-    else
-
-        E = 0
+local function crsfToModeID(value)
+    if not value then return nil end
+    
+    if value == "OK" then
+        return M.MODE.READY_TO_ARM
+    elseif value == "!ERR" then
+        return M.MODE.ERROR
+    elseif value == "WAIT" then
+        return M.MODE.WAIT
+--    elseif value == "AIR" then
+--        return M.MODE.ACRO_AIR
+    elseif value == "ACRO" or value == "AIR" then
+        return M.MODE.ACRO
+    elseif value == "!FS!" then
+        return M.MODE.FAILSAFE
+    elseif value == "HRST" then
+        return M.MODE.HOME_RESET
+    elseif value == "MANU" then
+        return M.MODE.PASSTHRU
+    elseif value == "RTH" then
+        return M.MODE.RTH
+    elseif value == "HOLD" then
+        return M.MODE.POS_HOLD_ANGLE
+    elseif value == "CRUZ" then
+        return M.MODE.CRUISE
+    elseif value == "CRSH" then
+        return M.MODE.COURSE_HOLD
+    elseif value == "WP" then
+        return M.MODE.WAYPOINT
+    elseif value == "AH" then
+        return M.MODE.ALT_HOLD_ANGLE
+    elseif value == "ANGL" then
+        return M.MODE.ANGLE
+    elseif value == "HOR" then
+        return M.MODE.HORIZON
+    elseif value == "ANGH" then
+        return M.MODE.ANGLE_HOLD
+    elseif value == "LAND" then
+        return M.MODE.LANDING
     end
-
-    return (A or 0) * 10000 + (B or 0) * 1000 + (C or 0) * 100 + (D or 0) * 10 + (E or 0)
 end
 
-local function mapABCDEtoMode(abcde)
+local function sportToModeID(abcde)
     local A, B, C, D, E = digits_ABCDE(abcde)
 
     if bit_is_set(A, 4) then return M.MODE.FAILSAFE end
@@ -139,34 +110,29 @@ local function mapABCDEtoMode(abcde)
     return M.MODE.ACRO
 end
 
-local function toABCDE(telemType, value)
+local function valueToModeId(telemType, value)
     if telemType == "sport" then
-        return tonumber(value) or 0
+        return sportToModeID(value or 0)
     elseif telemType == "crsf" then
-        return crsfToABCDE(tostring(value or ""))
+        return crsfToModeID(tostring(value or ""))
     else
-        return 0
+        return nil
     end
 end
 
 function M.eval(telemType, value)
-    local abcde = toABCDE(telemType, value)
+    local mode_id = valueToModeId(telemType, value)
+    
+    if mode_id == nil then return last_mode_id end
+    
+    last_mode_id = mode_id
 
-    if abcde == nil then return last_mode end
-
-    local mode = mapABCDEtoMode(abcde)
-
-    last_abcde = abcde
-    last_mode = mode
-
-    return mode
+    return mode_id
 end
 
-function M.last_abcde() return last_abcde end
 function M.last_mode() return last_mode end
 function M.reset()
-    last_abcde = 0
-    last_mode = M.MODE.DISARMED
+    last_mode_id = M.MODE.DISARMED
 end
 
 return M

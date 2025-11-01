@@ -7,7 +7,7 @@ local inavdash = require("inavdash")
 local render = {}
 local radio = assert(loadfile("radios.lua"))()
 
-local MODE_TEXT = {[0] = "DISARMED", [1] = "READY TO ARM", [2] = "ARMING PREVENTED", [10] = "ACRO", [11] = "ANGLE", [12] = "HORIZON", [13] = "MANUAL", [20] = "ALTITUDE HOLD", [21] = "POSITION HOLD", [22] = "WAYPOINT", [23] = "RTH", [26] = "COURSE HOLD", [27] = "CRUISE", [99] = "FAILSAFE"}
+local MODE_TEXT = {[0] = "DISARMED", [1] = "READY TO ARM", [2] = "ARMING PREVENTED", [10] = "ACRO", [11] = "ANGLE", [12] = "HORIZON", [13] = "MANUAL", [20] = "ALTITUDE HOLD", [21] = "POSITION HOLD", [22] = "WAYPOINT", [23] = "RTH", [26] = "COURSE HOLD", [27] = "CRUISE", [99] = "FAILSAFE", [100] = "WAIT", [101] = "ERROR!", [102] = "ACRO (AIR)", [103] = "HOME RESET", [104] = "LANDING", [105] = "ANGLE HOLD", [255] = "NO DATA"}
 
 local function ascii_skeleton(s) return (s or ""):gsub("[\128-\255]", "x") end
 
