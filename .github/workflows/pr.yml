@@ -30,9 +30,9 @@ jobs:
         # Show updated file (for verification)
         grep 'config\.' src/inav-dashboard/main.lua
 
-    - name: Create inav-dashboard-ethos-PR-<number>.zip (entire scripts folder)
+    - name: Create inav-dashboard-ethos-PR-<number>.zip (entire src folder)
       run: |
-        zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" scripts
+        zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" src
 
     - name: Upload inav-dashboard-ethos-PR-<number>.zip as Artifact
       uses: actions/upload-artifact@v4

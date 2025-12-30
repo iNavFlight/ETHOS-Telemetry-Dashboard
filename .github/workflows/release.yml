@@ -39,7 +39,7 @@ jobs:
         echo "GH_TYPE=$GH_TYPE" >> $GITHUB_ENV
 
     - name: Make release package
-      run: zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" scripts
+      run: zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" src
 
     - name: Create Release
       run: |

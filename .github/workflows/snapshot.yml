@@ -22,7 +22,7 @@ jobs:
         cat ${GITHUB_ENV}
 
     - name: Make snapshot package
-      run: zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" scripts
+      run: zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" src
 
     - name: Create Snapshot
       run: |
