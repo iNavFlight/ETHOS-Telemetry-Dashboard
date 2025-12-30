@@ -19,9 +19,9 @@ jobs:
         SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
         echo "GIT_VER=commit-${SHORT_SHA}" >> $GITHUB_ENV
 
-    - name: Create inav-dashboard-ethos-commit-<short_sha>.zip (entire scripts folder)
+    - name: Create inav-dashboard-ethos-commit-<short_sha>.zip (entire src folder)
       run: |
-        zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" scripts
+        zip -q -r -9 "inav-dashboard-ethos-${{ env.GIT_VER }}.zip" src
 
     - name: Upload inav-dashboard-ethos-commit-<short_sha>.zip as Artifact
       uses: actions/upload-artifact@v4
