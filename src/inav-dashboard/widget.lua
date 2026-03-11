@@ -250,26 +250,7 @@ function widget.paint()
 end
 
 function widget.wakeup()
-    local colorMode
-
-    if lcd.darkMode() then
-        colors = colorTable['darkmode']
-        colorMode = 'darkmode'
-    else
-        colors = colorTable['lightmode']
-        colorMode = 'lightmode'
-    end
-
-    if colorMode ~= lastColourMode then
-        if widget.render and widget.render.hd and widget.render.hd.resetArrowCache then
-
-            widget.render.hd.resetArrowCache(colors.hd)
-            widget.render.hd_light.resetArrowCache(colors.hd_light)
-        end
-        lastColourMode = colorMode
-    end
-
-    recomputeLayout()
+    local isVisible = lcd.isVisible()
 
     if widget.sensors and widget.sensors.telemetry then
         widget.sensors.telemetry.wakeup()
@@ -343,9 +324,50 @@ function widget.wakeup()
 
     end
 
+    do
+        local fm = sensors['flightmode']
+        local prev = widget._prev_flightmode
+
+        if (fm == 0 or fm == 1) and (prev ~= 0 or prev ~= 1) then
+            sensors['home_latitude'] = 0
+            sensors['home_longitude'] = 0
+            sensors['gps_distancehome'] = 0
+        end
+
+        if fm and (prev == nil or fm ~= prev) then
+            local file = string.format("audio/en/default/fm-%d.wav", fm)
+            system.playFile(file)
+            widget._prev_flightmode = fm
+        end
+    end
+
+    if not isVisible then return end
+
+    local colorMode
+
+    if lcd.darkMode() then
+        colors = colorTable['darkmode']
+        colorMode = 'darkmode'
+    else
+        colors = colorTable['lightmode']
+        colorMode = 'lightmode'
+    end
+
+    if colorMode ~= lastColourMode then
+        if widget.render and widget.render.hd and widget.render.hd.resetArrowCache then
+            widget.render.hd.resetArrowCache(colors.hd)
+        end
+        if widget.render and widget.render.hd_light and widget.render.hd_light.resetArrowCache then
+            widget.render.hd_light.resetArrowCache(colors.hd)
+        end
+        lastColourMode = colorMode
+    end
+
+    recomputeLayout()
+
     if widget.render.ah then
         local ahconfig = {ppd = 2.0, show_altitude = true, show_groundspeed = true}
-        if widget.render.ah then widget.render.ah.wakeup(sensors, units, widget.layout.ah.x, widget.layout.ah.y, widget.layout.ah.w, widget.layout.ah.h, ahconfig) end
+        if widget.layout.ah then widget.render.ah.wakeup(sensors, units, widget.layout.ah.x, widget.layout.ah.y, widget.layout.ah.w, widget.layout.ah.h, ahconfig) end
     end
 
     if widget.render.map then
@@ -359,9 +381,7 @@ function widget.wakeup()
             show_zoom = true,
             angle_step = 5,
             colors = {bg = lcd.RGB(0, 60, 0), grid = lcd.RGB(0, 90, 0), trail = lcd.RGB(170, 220, 170), own = lcd.RGB(255, 255, 255), home = lcd.RGB(255, 255, 255), text = lcd.RGB(255, 255, 255)},
-
             home = sensors['gps_lock'] and {lat = sensors['home_latitude'], lon = sensors['home_longitude']} or nil,
-
             light_on_gps_ms = 2000
         }
 
@@ -385,24 +405,7 @@ function widget.wakeup()
         if box then widget.render.hd_light.wakeup(box.x, box.y, box.w, box.h, s, units, opts) end
     end
 
-    do
-        local fm = sensors['flightmode']
-        local prev = widget._prev_flightmode
-
-        if (fm == 0 or fm == 1) and (prev ~= 0 or prev ~= 1) then
-            sensors['home_latitude'] = 0
-            sensors['home_longitude'] = 0
-            sensors['gps_distancehome'] = 0
-        end
-
-        if fm and (prev == nil or fm ~= prev) then
-            local file = string.format("audio/en/default/fm-%d.wav", fm)
-            system.playFile(file)
-            widget._prev_flightmode = fm
-        end
-    end
-
-    if lcd.isVisible() then lcd.invalidate() end
+    lcd.invalidate()
 
 end
 
