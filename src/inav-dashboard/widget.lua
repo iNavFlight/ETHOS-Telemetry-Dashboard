@@ -21,7 +21,7 @@ local slideRenderPauseUntil = 0
 
 local gps_lock_prev = false
 
-local SLIDE_RENDER_PAUSE_SECONDS = 1.0
+local SLIDE_RENDER_PAUSE_SECONDS = 5.0
 
 local colorTable = {
     ['darkmode'] = {backdrop = lcd.RGB(0, 0, 0), background = lcd.RGB(40, 40, 40), foreground = lcd.RGB(255, 255, 255), label = lcd.RGB(200, 200, 200), hd = "gfx/hd_white.png"},
