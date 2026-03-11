@@ -17,8 +17,11 @@ local internalModule = nil
 local externalModule = nil
 local currentPage = nil
 local lastColourMode = nil
+local slideRenderPauseUntil = 0
 
 local gps_lock_prev = false
+
+local SLIDE_RENDER_PAUSE_SECONDS = 1.0
 
 local colorTable = {
     ['darkmode'] = {backdrop = lcd.RGB(0, 0, 0), background = lcd.RGB(40, 40, 40), foreground = lcd.RGB(255, 255, 255), label = lcd.RGB(200, 200, 200), hd = "gfx/hd_white.png"},
@@ -136,6 +139,15 @@ local function recomputeLayout()
     widget.layout = computeGridRects(sw, sh, page.grid or {}, page.table or {})
 end
 
+local function isSlideRenderPaused()
+    if slideRenderPauseUntil <= 0 then return false end
+    if os.clock() >= slideRenderPauseUntil then
+        slideRenderPauseUntil = 0
+        return false
+    end
+    return true
+end
+
 function widget.create()
 
     if not widget.sensors.telemetry then widget.sensors.telemetry = assert(loadfile("sensors/telemetry.lua"))() end
@@ -154,6 +166,7 @@ end
 function widget.configure() end
 
 function widget.paint()
+    if isSlideRenderPaused() then return end
 
     local LCD_WIDTH, LCD_HEIGHT = lcd.getWindowSize()
 
@@ -251,6 +264,7 @@ end
 
 function widget.wakeup()
     local isVisible = lcd.isVisible()
+    local renderPaused = isSlideRenderPaused()
 
     if widget.sensors and widget.sensors.telemetry then
         widget.sensors.telemetry.wakeup()
@@ -341,7 +355,7 @@ function widget.wakeup()
         end
     end
 
-    if not isVisible then return end
+    if not isVisible or renderPaused then return end
 
     local colorMode
 
@@ -421,6 +435,10 @@ end
 function widget.write() storage.write("currentPage", tostring(currentPage or 1)) end
 
 function widget.event(widget, category, value, x, y)
+    if category == EVT_TOUCH and value == TOUCH_MOVE then
+        slideRenderPauseUntil = os.clock() + SLIDE_RENDER_PAUSE_SECONDS
+    end
+
     if not lcd.hasFocus() then return false end
 
     local num_pages = #LAYOUTS
